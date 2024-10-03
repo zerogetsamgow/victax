@@ -42,7 +42,11 @@ victax =
     tax_sub = str_extract(sheet,".*levy"),
     tax_line = str_remove(sheet, tax_sub) |> str_trim(),
     tax_line = coalesce(tax_line,sheet),
-    tax_line = str_replace(tax_line, ".*(payroll|wellbeing).*","Payroll tax"),
+    tax_line = 
+      if_else(
+        str_detect(sheet, "payroll|wellbeing"),
+        "Payroll tax", 
+        tax_line),
     tax_line = str_replace(tax_line, ".*landholding.*","Land tax")) |> 
   filter(!is.na(estimate)) |> 
   mutate(fy_date = fy::fy2date(financial_year)) 

@@ -5,7 +5,7 @@ account: zerogetsamgow
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12897322
-bundleId: 9175541
+bundleId: 9175897
 url: https://zerogetsamgow.shinyapps.io/victax/
 version: 1
 asMultiple: FALSE
