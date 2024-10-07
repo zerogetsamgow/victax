@@ -1,10 +1,4 @@
 #
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
 #
 
 library(systemfonts)
@@ -12,14 +6,16 @@ library(shiny)
 library(vagotheme)
 library(tidyverse)
 library(arrow)
+# library(duckdb)
+# library(DBI)
 
-db =  dbConnect(duckdb())
+#db =  dbConnect(duckdb())
 
 # Read data 
 victax.app = read_parquet( "./data/victax.parquet") |> 
   filter(str_detect(tax_line,("Total|Payroll tax|Land ")))
 
-victax.app =  copy_to(db,   df = victax.app, overwrite = TRUE)
+#victax.app =  copy_to(db,   df = victax.app, overwrite = TRUE)
 
 
 # Define UI for application that draws a histogram
@@ -84,7 +80,7 @@ server <- function(input, output) {
         tax_line == input$.taxline,
         publication_type %in% c("Budget"),
         publication_year %in% input$.budget
-     ) |> collect()
+     ) # |> collect()
     })
   
   .actual.data <<- 
@@ -94,7 +90,7 @@ server <- function(input, output) {
         tax_line == input$.taxline,
         publication_type == "Actual",
         fy_date > as.Date("2019-1-1")
-     ) |> collect()
+     ) # |> collect()
     })
   
   .min = reactive({max(0,floor(min(.actual.data()$estimate)/1e3)-1)})
@@ -139,7 +135,8 @@ server <- function(input, output) {
       spacing = "l",
       digits = 0,
       width = "80%",
-      na = "-"
+      na = "-",
+      caption = "Estimates in table shown in $ millions."
     )
   
   
