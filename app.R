@@ -3,7 +3,7 @@
 
 library(systemfonts)
 library(shiny)
-library(vagotheme)
+library(vpstheme)
 library(tidyverse)
 library(arrow)
 # library(duckdb)
@@ -35,8 +35,8 @@ ui <- fluidPage(
             br(),
             checkboxGroupInput(
               ".budget","Budget", 
-              choices = c("2019-20","2020-21","2021-22","2022-23","2023-24","2024-25"),
-              selected =  c("2021-22","2024-25"))
+              choices = c("2019-20","2020-21","2021-22","2022-23","2023-24","2024-25","2025-26"),
+              selected =  c("2022-23","2023-24", "2024-25","2025-26"))
         ),
 
         # Show a plot of the generated distribution
@@ -98,12 +98,14 @@ server <- function(input, output) {
   
   
   .colours =
-    c("2019-20" = vago_colours$theme[1],
-      "2020-21" = vago_colours$theme[2],
-      "2021-22" = vago_colours$theme[3],
-      "2022-23" = vago_colours$theme[4],
-      "2023-24" = vago_colours$theme[5],
-      "2024-25" = vago_colours$theme[6]
+    c("2019-20" = bv.navy,
+      "2020-21" = bv.teal,
+      "2021-22" = bv.royal,
+      "2022-23" = bv.amber,
+      "2023-24" = bv.pink,
+      "2024-25" = bv.purple,
+      "2025-26" = bv.chartreuse
+      
     )
   
   output$explainer =
@@ -122,7 +124,7 @@ server <- function(input, output) {
         .actual.data()
       ) |> 
       ungroup() |> 
-      filter(financial_year %in% c("2022-23","2023-24")) |> 
+      filter(financial_year %in% c("2024-25","2025-26","2026-27")) |> 
       arrange(publication_year, financial_year) |>
       select(
         "Source" = publication_type,
@@ -176,7 +178,7 @@ server <- function(input, output) {
             x = fy_date,
             y = estimate/1000,
           ),
-          colour = vago.grey) +
+          colour = bv.charcoal) +
         scale_y_continuous(
           name = "Revenue, $ billion",
           limits = c(.min(),.max()),
@@ -187,14 +189,14 @@ server <- function(input, output) {
           breaks = 
             seq.Date(
               from = dmy("30-6-2019"),
-              to = dmy("30-6-2028"),
+              to = dmy("30-6-2029"),
               by = "years"),
           date_labels = "%Y",
           limits = dmy("1-6-2019","1-1-2030")) +
         guides(colour = "none") +
         labs(title = str_glue("Budget {str_to_lower(input$.taxline)} vs actual revenue (grey line)")) +
         scale_color_manual(values = .colours) +
-        theme_vago_white()
+        theme_vps_dh()
       
     )
   })

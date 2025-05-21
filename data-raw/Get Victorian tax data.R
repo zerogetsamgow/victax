@@ -3,8 +3,8 @@ library(tidyverse)
 library(rvest)
 library(arrow)
 
-dtf.url = "https://www.dtf.vic.gov.au/"
-tax.url = str_c(dtf.url,"state-financial-data-sets/state-taxation-revenue")
+dtf.url = "https://www.dtf.vic.gov.au"
+tax.url = str_c(dtf.url,"/state-financial-data-sets/state-taxation-revenue")
 
 tax.file.url =
   tax.url |> 
@@ -18,7 +18,7 @@ tax.file.url =
 
 tax.temp = tempfile(fileext = "xlsx")
 
-download.file(tax.file.url$value[1],tax.temp,mode="wb")
+download.file(tax.file.url$value[1],tax.temp)
 
 victax =
   tibble(
