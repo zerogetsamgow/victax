@@ -1,0 +1,13 @@
+name: inst
+title: inst
+username: zerogetsamgow
+account: zerogetsamgow
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 17295893
+bundleId: 11949676
+url: https://zerogetsamgow.shinyapps.io/inst/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: useful_chart_code.R

@@ -1,19 +1,18 @@
 #
 #
-
 library(systemfonts)
 library(shiny)
-library(vpstheme)
-library(tidyverse)
-library(arrow)
-# library(duckdb)
-# library(DBI)
 
 #db =  dbConnect(duckdb())
 
 # Read data 
-victax.app = read_parquet( "./data/victax.parquet") |> 
-  filter(str_detect(tax_line,("Total|Payroll tax|Land ")))
+victax.app = 
+  arrow::read_parquet(
+    "./extdata/victax_tbl.parquet") |> 
+  dplyr::filter(
+    stringr::str_detect(
+      tax_line,
+      ("Total|Payroll|Land ")))
 
 #victax.app =  copy_to(db,   df = victax.app, overwrite = TRUE)
 
@@ -27,16 +26,25 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
             # Input: Select the random distribution type ----
-            radioButtons(".taxline", "Tax line:", choices = unique(victax.app |> pull(tax_line))),
+            radioButtons(
+              ".taxline", 
+              "Tax line:", 
+              choices = 
+                unique(
+                  victax.app |> 
+                   dplyr::pull(tax_line))),
             br(),
-            radioButtons(".addlevy", "Add levy revenue:", choices = c("Yes","No"),
-                          selected = "No"),
+            radioButtons(
+              ".addlevy", 
+              "Add levy revenue:", 
+              choices = c("Yes","No"),
+              selected = "No"),
             textOutput("explainer"),
             br(),
             checkboxGroupInput(
               ".budget","Budget", 
-              choices = c("2019-20","2020-21","2021-22","2022-23","2023-24","2024-25","2025-26"),
-              selected =  c("2022-23","2023-24", "2024-25","2025-26"))
+              choices = c("2019-20","2020-21","2021-22","2022-23","2023-24","2024-25","2025-26","2026-27"),
+              selected =  c("2022-23","2025-26", "2026-27"))
         ),
 
         # Show a plot of the generated distribution
@@ -56,36 +64,39 @@ server <- function(input, output) {
     reactive({
       if(input$.addlevy == "No" & 
          input$.taxline %in% c("Payroll tax","Land tax")){
-        filter(
+        dplyr::filter(
           victax.app,
-          is.na(tax_sub)) |>  collect()
+          tax_sub == "") |>  
+          dplyr::collect() 
       } else {
         victax.app |> 
-          group_by(
+          dplyr::group_by(
             financial_year,
             tax_line,
             estimate_type,
             publication_year,
             publication_type,
             fy_date) |> 
-          summarise(estimate = sum(estimate)) 
+          dplyr::summarise(
+            estimate = sum(estimate),
+            .groups = 'drop') 
       }
       })
       
   
   .estimate.data <<-
     reactive({
-      filter(
+      dplyr::filter(
         .victax.app(), 
         tax_line == input$.taxline,
-        publication_type %in% c("Budget"),
+        publication_type == "Budget",
         publication_year %in% input$.budget
      ) # |> collect()
     })
   
   .actual.data <<- 
     reactive({ 
-      filter(
+      dplyr::filter(
         .victax.app(), 
         tax_line == input$.taxline,
         publication_type == "Actual",
@@ -98,19 +109,20 @@ server <- function(input, output) {
   
   
   .colours =
-    c("2019-20" = bv.navy,
-      "2020-21" = bv.teal,
-      "2021-22" = bv.royal,
-      "2022-23" = bv.amber,
-      "2023-24" = bv.pink,
-      "2024-25" = bv.purple,
-      "2025-26" = bv.chartreuse
-      
-    )
+    c(
+      "2019-20" = vpstheme::bv.navy,
+      "2020-21" = vpstheme::bv.teal,
+      "2021-22" = vpstheme::bv.royal,
+      "2022-23" = vpstheme::bv.amber,
+      "2023-24" = vpstheme::bv.pink,
+      "2024-25" = vpstheme::bv.purple,
+      "2025-26" = vpstheme::bv.chartreuse,
+      "2026-27" = vpstheme::bv.rose
+    ) 
   
   output$explainer =
     renderText({
-      str_c(
+      stringr::str_c(
         "Choosing Yes adds COVID and ",
         "Mental health and wellbeing", 
         "levies to Payroll tax and ",
@@ -119,20 +131,23 @@ server <- function(input, output) {
   
   output$taxtable =
     renderTable({
-      bind_rows(
+      dplyr::bind_rows(
         .estimate.data(),
         .actual.data()
       ) |> 
-      ungroup() |> 
-      filter(financial_year %in% c("2024-25","2025-26","2026-27")) |> 
-      arrange(publication_year, financial_year) |>
-      select(
+      dplyr::ungroup() |> 
+      dplyr::filter(
+        financial_year %in% c("2022-23","2025-26","2026-27")) |> 
+      dplyr::arrange(publication_year, financial_year) |>
+      dplyr::select(
         "Source" = publication_type,
         "Year" = publication_year,
         financial_year,
         estimate
       ) |> 
-      pivot_wider(names_from = financial_year,values_from = estimate) |> 
+      tidyr::pivot_wider(
+        names_from = financial_year,
+        values_from = estimate) |> 
       data.table::data.table()},
       spacing = "l",
       digits = 0,
@@ -147,60 +162,65 @@ server <- function(input, output) {
       req(input$.taxline)
       req(input$.budget)
       suppressWarnings(
-        ggplot() +
-          geom_line(
+        ggplot2::ggplot() +
+          ggplot2::geom_line(
             data = .estimate.data(),
             size = 1.2,
-            aes(
+            ggplot2::aes(
               x = fy_date,
               y = estimate/1000,
               colour = publication_year,
               group = publication_year,
             )
-          )+
-        geom_text(
-          size = 5,
-          data = 
-            .estimate.data() |> 
-              group_by(publication_type,publication_year) |>
-              filter(fy_date == max(fy_date)),
-          aes(
-            x = fy_date + days(1),
+            )+
+          ggplot2::geom_text(
+            size = 5,
+            data = 
+              .estimate.data() |> 
+                dplyr::group_by(
+                  publication_type,
+                  publication_year) |>
+               dplyr::filter(fy_date == max(fy_date)),
+          ggplot2::aes(
+            x = fy_date + lubridate::days(14),
             y = estimate/1000,
             label = publication_year,
             colour = publication_year),
-          vjust = 0,
-          hjust = 0)+
-        geom_line(
-          size = 1.2,
-          data = .actual.data(),
-          aes(
-            x = fy_date,
-            y = estimate/1000,
-          ),
-          colour = bv.charcoal) +
-        scale_y_continuous(
+            vjust = 0,
+            hjust = 0)+
+          ggplot2::geom_line(
+            size = 1.2,
+            data = .actual.data(),
+            ggplot2::aes(
+              x = fy_date,
+              y = estimate/1000,
+            ),
+            colour = vpstheme::bv.charcoal) +
+        ggplot2::scale_y_continuous(
           name = "Revenue, $ billion",
           limits = c(.min(),.max()),
-          #breaks = seq(0,40, by = 2)
-        )+
-        scale_x_date(
-          name = "Financial year ending 30 June",
+          breaks = seq(0,50, by = 2)
+          )+
+        ggplot2::scale_x_date(
+          name = "Financial year ending 30 June 20*",
           breaks = 
             seq.Date(
-              from = dmy("30-6-2019"),
-              to = dmy("30-6-2029"),
+              from = lubridate::dmy("30-6-2019"),
+              to = lubridate::dmy("30-6-2031"),
               by = "years"),
-          date_labels = "%Y",
-          limits = dmy("1-6-2019","1-1-2030")) +
-        guides(colour = "none") +
-        labs(title = str_glue("Budget {str_to_lower(input$.taxline)} vs actual revenue (grey line)")) +
-        scale_color_manual(values = .colours) +
-        theme_vps_dh()
-      
+          date_labels = "%y",
+          limits = lubridate::dmy("1-6-2019","1-1-2031")) +
+        ggplot2::guides(colour = "none") +
+          ggplot2::labs(
+            title = 
+              stringr::str_glue(
+                "Budget {stringr::str_to_lower(input$.taxline)} vs actual revenue (grey line)")) +
+        ggplot2::scale_color_manual(values = .colours) +
+        vpstheme::theme_vps_dh()
     )
   })
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+

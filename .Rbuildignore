@@ -1,1 +1,9 @@
+^renv$
+^renv\.lock$
 ^data-raw$
+^README\.Rmd$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.positai$
+^\.claude$
+^LICENSE\.md$

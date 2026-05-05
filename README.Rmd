@@ -1,0 +1,48 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# victax
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of victax is to provide Victorian Government budget data in tidy format.
+
+## Installation
+
+You can install the development version of ***victax*** from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("zerogetsamgow/victax")
+```
+
+## Taxation data
+
+***victax*** converts [state taxation revenue](https://www.dtf.vic.gov.au/state-taxation-revenue) data published by the Victorian Department of Treasury and Finance in .xlsx format into tidy data.
+
+The data, saved and exported as `victax_tbl` contains actuals from 1996-97 - the first year accrual-based "whole of government" financial statements - and budget, budget update, and pre-election budget update estimates back to the 2013-14 budget. Data for the current financial year and most recent budget is shown below.
+
+```{r example}
+library(victax)
+## basic example code
+head(
+  victax_tbl |> 
+    dplyr::filter(
+      financial_year == fy::date2fy(Sys.Date())),12 
+  )
+```
+
+The package builds an [interactive shiny app](https://zerogetsamgow.shinyapps.io/victax/) which can be used to explore the tax data.
