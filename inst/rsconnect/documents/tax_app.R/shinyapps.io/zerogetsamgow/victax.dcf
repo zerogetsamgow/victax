@@ -5,9 +5,9 @@ account: zerogetsamgow
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 12897322
-bundleId: 11949901
+bundleId: 11954833
 url: https://zerogetsamgow.shinyapps.io/victax/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: useful_chart_code.R
+ignoredFiles: extdata/victax_tbl.parquet|useful_chart_code.R

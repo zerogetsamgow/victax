@@ -137,7 +137,7 @@ server <- function(input, output) {
       ) |> 
       dplyr::ungroup() |> 
       dplyr::filter(
-        financial_year %in% c("2022-23","2025-26","2026-27")) |> 
+        financial_year %in% c("2024-25","2025-26","2026-27")) |> 
       dplyr::arrange(publication_year, financial_year) |>
       dplyr::select(
         "Source" = publication_type,
