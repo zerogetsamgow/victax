@@ -20,7 +20,7 @@ output.file.url =
     value = 
       stringr::str_c(dtf.url,link)) 
 
-vicoutput =
+vicoutput_tbl =
   output.file.url |> 
   dplyr::rowwise() |> 
   dplyr::mutate(
@@ -37,39 +37,22 @@ vicoutput =
   dplyr::filter(
     stringr::str_detect(
       sheet,
-      "(P|p)erform")) |> 
+      "(P|p)erform|(D|d)epart")) |> 
   dplyr::mutate(
     data = 
       purrr::pmap(
         list(download,sheet), 
         readxl::read_excel, 
-        skip=1, 
+        skip=0, 
         col_types = "text")) |> 
   dplyr::select(sheet, data) |> 
   tidyr::unnest(data) |> 
-  dplyr::rename(
-    "output_measure"=2,
-    "unit_of_measure"=3) |>
+  janitor::clean_names() |> 
   dplyr::filter(
-    !is.na(output_measure),
+    !is.na(output),
     !stringr::str_detect(
-      output_measure,
+      output,
       "^This|^The|^New|^No target|renamed|unable")) |> 
-  dplyr::mutate(
-    output_type = 
-      stringr::str_extract(
-        output_measure, 
-        "Quantity|Quality|Timeliness|Cost")) |> 
-  tidyr::fill(output_type) |> 
-  dplyr::mutate(
-    output_name = 
-      dplyr::if_else(
-        is.na(unit_of_measure) & 
-          !stringr::str_detect(
-            output_measure,
-            "Quantity|Quality|Timeliness|Cost"),
-        output_measure,NA_character_)) |> 
-  tidyr::fill(output_name) |> 
   dplyr::filter(!is.na(unit_of_measure)) |> 
   tidyr::pivot_longer(
     tidyselect::contains("20")) |> 
@@ -83,23 +66,38 @@ vicoutput =
     financial_year = 
       stringr::str_extract(
         name,
-        "[0-9]{4}-[0-9]{4}") |> 
+        "[0-9]{4}_[0-9]{2,4}") |> 
+      stringr::str_replace("_","-") |> 
       fy::fy2date() |> 
       fy::date2fy(),
     value_type = 
       stringr::str_extract(
-        name,
-        "[a-z]+\\s*[a-z]*")) |> 
+        stringr::str_remove(
+          name, "x"),
+        "[a-z]+(\\s|_)*[a-z]*") |> 
+      stringr::str_replace("_"," ")) |> 
   dplyr::filter(!is.na(value)) |> 
   dplyr::select(
     sheet, 
     tidyselect::contains("output"),
+    tidyselect::contains("measure"),
     financial_year,
-    tidyselect::contains("value"),
-    unit_of_measure)
+    tidyselect::contains("value"))
  
 
+
+# Combine with existing data
+vicoutput_tbl =
+  dplyr::bind_rows(
+    vicoutput_tbl, 
+    victax::vicoutput_tbl) |> 
+  unique()
+
+# Save for export
+usethis::use_data(vicoutput_tbl, overwrite = TRUE)
+
+# Save for app
 arrow::write_parquet(
-  vicoutput,
-  sink = ".inst/extdata/vicoutput_tbl.parquet"
+  vicoutput_tbl,
+  sink = "./inst/extdata/vicoutput_tbl.parquet"
 )
