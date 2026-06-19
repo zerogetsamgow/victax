@@ -5,7 +5,7 @@
 \alias{victax_tbl}
 \title{Victorian taxation revenue data}
 \format{
-A data frame with 1564 rows and 8 variables:
+A data frame with 1685 rows and 8 variables:
 \describe{
 \item{\code{tax_line}}{The name of the tax line}
 \item{\code{tax_sub}}{Sub taxes where tax levies reported separetly}

@@ -169,6 +169,8 @@ arrow::write_parquet(
   sink = "./inst/extdata/victax_tbl.parquet"
 )
 
+
+
 # Remove download
 file.remove(tax.file.url$file_name)
 
