@@ -133,8 +133,8 @@ output_plot =
   scale_x_date(
     name = "Financial year ending 30 June",
     date_labels = "%Y",
-    breaks = seq.Date(from = ymd("2016-6-30"), to = ymd("2025-6-30"), by = "3 years"),
-    limits = ymd(c("2015-1-1","2029-1-31")),
+    breaks = seq.Date(from = ymd("2016-6-30"), to = ymd("2027-6-30"), by = "3 years"),
+    limits = ymd(c("2015-1-1","2030-1-31")),
     expand = c(0.01,0.01)) +
   scale_fill_manual(values = c("Levy"=bv.pink,"Base"=bv.royal), guide = "none")+
   scale_colour_manual(
@@ -177,7 +177,7 @@ regulation_costs =
 regulation_plot =
   ggplot(
     data = 
-      regulation_costs,
+      regulation_costs |> dplyr::filter_out(stringr::str_detect(stringr::str_to_lower(output),"child")),
     aes(
       x = fy_date,
       y = value,
@@ -187,11 +187,12 @@ regulation_plot =
   geom_text(
     position = position_stack(vjust = .5),
     show.legend = FALSE,
-    size = 4
+    size = 4,
+    colour = bv.smoke
   ) +
   geom_text(
     data = 
-      regulation_costs |> 
+      regulation_costs |> dplyr::filter_out(stringr::str_detect(stringr::str_to_lower(output),"child")) |> 
       filter(fy_date == max(fy_date)) |> 
       mutate(fy_date = fy_date + months(6)),
     aes(
@@ -211,11 +212,13 @@ regulation_plot =
     limits = ymd(c("2024-1-1","2029-1-31")),
     expand = c(0.01,0.01)) +
   vpstheme::scale_y_continuvps(
-    limits = c(0,2.7e3),
+    limits = c(0,2e3),
     name = "Mental health funding, $ billion",
     labels = scales::label_number(scale = 1/1e3)
   ) +
-  labs(title = "Victorian Government mental health output funding",
+  labs(title = "Victorian Government regulator funding",
        caption = "Source: dtf.vic.gov.au/state-financial-data-sets")+
+  vpstheme::scale_fill_djcs(palette = 'chart') +
+  vpstheme::scale_colour_djcs(palette = 'chart') +
   vpstheme::theme_vps_dh(
     base_size = 30); regulation_plot
